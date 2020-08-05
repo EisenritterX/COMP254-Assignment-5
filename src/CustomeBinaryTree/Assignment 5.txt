@@ -1,0 +1,329 @@
+************************************************************************************************************************
+* Custom Node Class                                                                                                    *
+************************************************************************************************************************
+package CustomeBinaryTree;
+
+// Custom comparable generic node
+public class CustomNode<E extends Comparable<E>> {
+    // Custom Node Propertiies
+    private E data;
+    private  CustomNode left;
+    private  CustomNode right;
+
+    // Custom Node Constructor
+    public CustomNode(E value){
+        this.data = value;
+        CustomNode left;
+        CustomNode right;
+    }
+
+    // Data Getter & Setter
+    public void setData(E data) {
+        this.data = data;
+    }
+    public E getData() {
+        return data;
+    }
+
+    // Node Left Property
+    public CustomNode getLeft() {
+        return left;
+    }
+    public void setLeft(CustomNode left) {
+        this.left = left;
+    }
+
+    // Node Right Property
+    public CustomNode getRight() {
+        return right;
+    }
+    public void setRight(CustomNode right) {
+        this.right = right;
+    }
+
+    // Search Node Function -- Add on
+    public  CustomNode search(E value){
+        CustomNode result = null;
+        if(this.data.compareTo(value)==0) return this;
+        if(this.left==null&& this.right == null) return null;
+        result=this.right.search(value);
+        if(result!= null && result.data.compareTo(value) == 0) return result;
+        return this.left.search(value);
+    }
+
+    // Display Override
+    @Override
+    public String toString() {
+        return "CustomNode{" +
+                "Data =" + data +
+                '}';
+    }
+}
+
+************************************************************************************************************************
+* Custome Binary Tree Class                                                                                            *
+************************************************************************************************************************
+package CustomeBinaryTree;
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+// Generic Tree where the node data are comparable
+public class CustomBinaryTree<E extends Comparable<E>> {
+    CustomNode root;
+    int levelCounter  =0;
+
+    int maxDepth (CustomNode root){
+        // Tree DNE if root is null
+        if (root == null) return 0;
+
+        // Get the depth of the left and right subtree using recursion
+        int leftDepth = maxDepth(root.getLeft());
+        int rightDepth = maxDepth(root.getRight());
+
+        return (leftDepth>rightDepth)? leftDepth+1:rightDepth+1;
+    }
+
+    // Recursive Add Node
+    private CustomNode addRecursive(CustomNode current, E value){
+        if(current == null) return new CustomNode(value);
+
+        // If value is lesser than the current node, set the left child data to value
+        if(value.compareTo((E) current.getData())<0){
+            current.setLeft(addRecursive(current.getLeft(),value));
+        }
+        // If value is greater than the current node, set the right child data to value
+        else if(value.compareTo((E)current.getData())>0 ){
+            current.setRight(addRecursive(current.getRight(),value));
+        }
+        else {return current;}
+        return current;
+    }
+
+    // Base Add Case
+    public void  add(E value){
+        root = addRecursive(root,value);
+    }
+
+    // Search for Node
+    private boolean containsNodeRecursive(CustomNode current, E value){
+        if(current==null) return false;
+        if(value.compareTo((E) current.getData()) == 0)return true;
+        // Search Left of less, search right if more
+        return (value.compareTo((E) current.getData())<0)?containsNodeRecursive(current.getLeft(),value)
+                :containsNodeRecursive(current.getRight(),value);
+    }
+
+    // Base Search Case
+    public boolean containsNode(E value) {
+        return containsNodeRecursive(root,value);
+    }
+
+    // Recursive Deletion
+    private CustomNode deleteRecursive(CustomNode current, E value){
+        if (current==null)  return null;
+        if(value == current.getData()){
+            // Node to delete found
+            // Has no children
+            if (current.getLeft() == null && current.getRight() == null) return null;
+            // Has only one child
+            if (current.getRight()==null) return current.getLeft();
+            if (current.getLeft()==null) return current.getRight();
+            // Has both children
+            E smallestValue = findSmallestValue(current.getRight());
+            // set the current to the smallest child
+            current.setData(smallestValue);
+            // delete the right sub-tree
+            current.setRight(deleteRecursive(current.getRight(),smallestValue));
+            return current;
+        }
+        if(value.compareTo((E) current.getData())<0){
+            current.setLeft(deleteRecursive(current.getLeft(),value));
+            return current;
+        }
+        current.setRight(deleteRecursive(current.getRight(),value));
+        return current;
+    }
+
+    // Helper function to find the smallest value
+    private E findSmallestValue(CustomNode root){
+        return root.getLeft()==null? (E)root.getData():findSmallestValue(root.getLeft());
+    }
+
+    //Base Case Delete
+    public void delete(E value){
+        root = deleteRecursive(root,value);
+    }
+
+    //////////////////////////
+    // Traversing the Tree  //
+    //////////////////////////
+
+    // Depth-First Traversal //
+
+    // In Order Traversal left sub-tree, root, right sub-tree
+    public void  traverseInOrder(CustomNode node){
+        if(node!=null){
+            traverseInOrder(node.getLeft());
+            System.out.print("Level "+(maxDepth(root)- maxDepth(node))+": " + node.getData() + "\n");
+            traverseInOrder(node.getRight());
+        }
+    }
+    // Pre Order Traversal --> root --> Left Subtree --> Right Subtree
+    public void traversePreOrder(CustomNode node){
+
+        if(node!=null){
+            System.out.print("Level "+(maxDepth(root)- maxDepth(node))+": " + node.getData() + "\n");
+            traversePreOrder(node.getLeft());
+            traversePreOrder(node.getRight());
+        }
+
+    }
+    // Post Order Traversal --> Left Subtree --> Right Subtree  --> root
+    public void traversePostOrder(CustomNode node){
+        if(node!=null){
+            traversePreOrder(node.getLeft());
+            traversePreOrder(node.getRight());
+            System.out.print("Level "+(maxDepth(root)- maxDepth(node))+": " + node.getData() + "\n");
+        }
+    }
+    // Breadth-First Search //
+    public void traverseLevelOrder() {
+        if (root == null) return;
+        // Use Queue ADT to hold all node of each level in order
+        Queue<CustomNode> nodes = new LinkedList<>();
+        nodes.add(root);
+        while (!nodes.isEmpty()) {
+            CustomNode node = nodes.remove();
+            System.out.print(" " + node.getData());
+            if (node.getLeft() != null) nodes.add(node.getLeft());
+            if (node.getRight() != null) nodes.add(node.getRight());
+        }
+    }
+
+    // Get depth of the tree
+
+    // String Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        result.append("Custom Binary Tree: " +"\n"+root.getData());
+        return result.toString();
+    }
+}
+
+************************************************************************************************************************
+* Test Harness                                                                                                         *
+************************************************************************************************************************
+// Test Harness
+// Created By: George Zhou
+// Last Modified: Aug, 5, 2020
+
+package CustomeBinaryTree;
+public class Test {
+    public static void main(String[] args) {
+        CustomBinaryTree myCbt = GenerateBinaryTree();
+        // Preorder Test From Root
+        myCbt.traversePreOrder(myCbt.root);
+        System.out.println();
+        // Inorder Test From Root
+        myCbt.traverseInOrder(myCbt.root);
+        System.out.println();
+        // Postorder Test From Root
+        myCbt.traversePostOrder(myCbt.root);
+        System.out.println();
+
+        // Node Search Test
+        System.out.println(myCbt.containsNode(4));
+        System.out.println(myCbt.root.search(4));
+        CustomNode testNode =myCbt.root.search(4);
+        CustomNode testNode2 =myCbt.root.search(9);
+
+        // Test Case for middle node
+        System.out.println("This is test case for middle node");
+        // Preorder Test From Root
+        myCbt.traversePreOrder(testNode);
+        System.out.println();
+        // Inorder Test From Root
+        myCbt.traverseInOrder(testNode);
+        System.out.println();
+        // Postorder Test From Root
+        myCbt.traversePostOrder(testNode);
+        System.out.println();
+
+        // Test Case for end node
+        System.out.println("This is test case for end node");
+        // Preorder Test From Root
+        myCbt.traversePreOrder(testNode2);
+        System.out.println();
+        // Inorder Test From Root
+        myCbt.traverseInOrder(testNode2);
+        System.out.println();
+        // Postorder Test From Root
+        myCbt.traversePostOrder(testNode2);
+        System.out.println();
+    }
+
+    private static CustomBinaryTree GenerateBinaryTree(){
+        CustomBinaryTree cbt = new CustomBinaryTree();
+        cbt.add(6);
+        cbt.add(4);
+        cbt.add(8);
+        cbt.add(3);
+        cbt.add(5);
+        cbt.add(7);
+        cbt.add(9);
+        return cbt;
+    }
+}
+
+************************************************************************************************************************
+* Output Result                                                                                                        *
+************************************************************************************************************************
+Level 0: 6
+Level 1: 4
+Level 2: 3
+Level 2: 5
+Level 1: 8
+Level 2: 7
+Level 2: 9
+
+Level 2: 3
+Level 1: 4
+Level 2: 5
+Level 0: 6
+Level 2: 7
+Level 1: 8
+Level 2: 9
+
+Level 1: 4
+Level 2: 3
+Level 2: 5
+Level 1: 8
+Level 2: 7
+Level 2: 9
+Level 0: 6
+
+true
+CustomNode{Data =4}
+This is test case for middle node
+Level 1: 4
+Level 2: 3
+Level 2: 5
+
+Level 2: 3
+Level 1: 4
+Level 2: 5
+
+Level 2: 3
+Level 2: 5
+Level 1: 4
+
+This is test case for end node
+Level 2: 9
+
+Level 2: 9
+
+Level 2: 9
+
+
+Process finished with exit code 0
